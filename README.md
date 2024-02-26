@@ -21,7 +21,7 @@ Install
     
     conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
     conda install -c conda-forge rdkit
-    conda install pyg  pyyaml  biopython -c pyg
+    conda install pyg pyyaml biopython -c pyg
     pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.0+cu117.html
     pip install e3nn  fair-esm spyrmsd
 

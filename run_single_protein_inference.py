@@ -33,8 +33,12 @@ parser.add_argument('--device', type=int, default=0, help='CUDA_VISIBLE_DEVICES'
 parser.add_argument('--no_inference', action='store_true', default=False, help='used, when the inference part is already done.')
 parser.add_argument('--no_relax', action='store_true', default=False, help='by default, the last frame will be relaxed.')
 parser.add_argument('--movie', action='store_true', default=False, help='by default, no movie will generated.')
-parser.add_argument('--python', type=str, default='/home/zhangjx/anaconda3/envs/dynamicbind/bin/python', help='point to the python in dynamicbind env.')
-parser.add_argument('--relax_python', type=str, default='/home/zhangjx/anaconda3/envs/relax/bin/python', help='point to the python in relax env.')
+parser.add_argument('--python', type=str,
+                    default='/home/zhangjx/anaconda3/envs/dynamicbind/bin/python',
+                    help='point to the python in dynamicbind env.')
+parser.add_argument('--relax_python', type=str,
+                    default='/home/ruofan/anaconda3/envs/relax/bin/python',
+                    help='point to the python in relax env.')
 parser.add_argument('-l', '--protein_path_in_ligandFile', action='store_true', default=False, help='read the protein from the protein_path in ligandFile.')
 parser.add_argument('--no_clean', action='store_true', default=False, help='by default, the input protein file will be cleaned. only take effect, when protein_path_in_ligandFile is true')
 parser.add_argument('-s', '--ligand_is_sdf', action='store_true', default=False, help='ligand file is in sdf format.')
@@ -47,18 +51,6 @@ parser.add_argument('--hts', action='store_true', default=False, help='high-thro
 
 args = parser.parse_args()
 
-timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
-
-logging.basicConfig(level=logging.INFO)
-handler = logging.FileHandler(f'run.log')
-logger = logging.getLogger("")
-logger.addHandler(handler)
-
-logging.info(f'''\
-{' '.join(sys.argv)}
-{timestamp}
---------------------------------
-''')
 
 # python='/mnt/nas/glx-share-cache/InfraDev/glx-schrodinger/envs/dynamicbind_rdkit2022/bin/python'
 python = args.python
@@ -74,7 +66,7 @@ if args.protein_path_in_ligandFile:
     if args.no_clean:
         ligandFile_with_protein_path = args.ligandFile
     else:
-        ligandFile_with_protein_path = f"./data/ligandFile_with_protein_path_{timestamp}.csv"
+        ligandFile_with_protein_path = f"./data/ligandFile_with_protein_path.csv"
         cmd = f"{relax_python} {script_folder}/clean_pdb.py {args.ligandFile} {ligandFile_with_protein_path}"
         do(cmd)
 
@@ -87,9 +79,7 @@ elif args.ligand_is_sdf:
     # clean protein file
     os.system("mkdir -p data")
     cleaned_proteinFile = "./data/cleaned_input_proteinFile.pdb"
-    ligandFile_with_protein_path = f"./data/ligandFile_with_protein_path_{timestamp}.csv"
-    # if os.path.exists(ligandFile_with_protein_path):
-    #     os.system(f"rm {ligandFile_with_protein_path}")
+    ligandFile_with_protein_path = f"./data/ligandFile_with_protein_path.csv"
     cmd = f"{relax_python} {script_folder}/clean_pdb.py {args.proteinFile} {cleaned_proteinFile}"
     do(cmd)
 
@@ -109,7 +99,7 @@ elif args.ligand_is_sdf:
 else:
     # clean protein file
     cleaned_proteinFile = "./data/cleaned_input_proteinFile.pdb"
-    ligandFile_with_protein_path = f"./data/ligandFile_with_protein_path_{timestamp}.csv"
+    ligandFile_with_protein_path = f"./data/ligandFile_with_protein_path.csv"
     cmd = f"{relax_python} {script_folder}/clean_pdb.py {args.proteinFile} {cleaned_proteinFile}"
     do(cmd)
 
