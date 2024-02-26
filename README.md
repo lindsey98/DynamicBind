@@ -1,7 +1,9 @@
 # DynamicBind
-![](movie_reduced_fuzzed_v2.gif)
+Source code for the *Nature Communications* paper [DynamicBind: predicting ligand-specific protein-ligand complex structure with a deep equivariant generative model](https://www.nature.com/articles/s41467-024-45461-2).
 
-Source code for the *Nature Communications* paper [DynamicBind: predicting ligand-specific protein-ligand complex structure with a deep equivariant generative model](https://www.nature.com/articles/s41467-024-45461-2)
+DynamicBind recovers ligand-specific conformations from unbound protein structures (e.g. AF2-predicted structures), promoting efficient transitions between different equilibrium states.
+
+![](dynbind.gif)
 
 # Setup Environment
 
@@ -100,5 +102,18 @@ HTS Output files:
 # Training and testing Dataset
  https://zenodo.org/records/10429051
 
+# Reference
+```bibtex
+@article{lu2024dynamicbind,
+  title={DynamicBind: predicting ligand-specific protein-ligand complex structure with a deep equivariant generative model},
+  author={Lu, Wei and Zhang, Jixian and Huang, Weifeng and Zhang, Ziqiao and Jia, Xiangyu and Wang, Zhenyu and Shi, Leilei and Li, Chengtao and Wolynes, Peter G and Zheng, Shuangjia},
+  journal={Nature Communications},
+  volume={15},
+  number={1},
+  pages={1071},
+  year={2024},
+  publisher={Nature Publishing Group UK London}
+}
+```
 
 
