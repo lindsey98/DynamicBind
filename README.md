@@ -7,7 +7,7 @@ DynamicBind recovers ligand-specific conformations from unbound protein structur
 
 # Setup Environment
 
-Create environment:
+Create environment dynamicbind:
 ```commandline
 conda create -n dynamicbind python=3.10
 conda activate dynamicbind
@@ -27,16 +27,12 @@ conda create --name relax python=3.8
 conda activate relax
 pip install openmm
 conda install -c conda-forge pdbfixer
-conda install conda-forge::ambertools
 pip install compilers biopython
 pip install tqdm
 pip install scipy
 pip install pandas
 pip install rdkit
 pip install networkx
-# conda install openff-toolkit -c conda-forge 
-# conda install openff-units -c conda-forge
-# conda install conda-forge::libstdcxx-ng
 ```
 
 # Download pretrained ESM models
@@ -49,7 +45,7 @@ wget -c https://dl.fbaipublicfiles.com/fair-esm/models/esm2_t33_650M_UR50D.pt
 wget -c https://dl.fbaipublicfiles.com/fair-esm/regression/esm2_t33_650M_UR50D-contact-regression.pt
 ```
 
-# Checkpoints Download
+# Download checkpoints
 Download and unzip the workdir.zip containing the model checkpoint form https://zenodo.org/records/10137507, 
 v2 is contained here https://zenodo.org/records/10183369.
 
@@ -90,33 +86,46 @@ python run_single_protein_inference.py data/origin-1qg8.pdb data/1qg8_input.csv 
 
 [//]: # (### Docking Outputs)
 
+[//]: # ()
 [//]: # (The results of the docking step, typically found in the `results/test` folder, include:)
 
 [//]: # ()
+[//]: # ()
 [//]: # (1. **Affinity Score for Each Complex**: `affinity_prediction.csv`)
 
+[//]: # ()
 [//]: # (2. **Pose Score and Conformation of Each Animation**: Example files like `rank1_ligand_lddt0.63_affinity5.67_relaxed.sdf` &#40;where 0.63 is the pose score&#41; and corresponding protein `.pdb` files.)
 
+[//]: # ()
 [//]: # (3. **Data for Animation Generation**: Such as `rank1_reverseprocess_data_list.pkl` and `rank2_reverseprocess_data_list.pkl`.)
 
 [//]: # ()
+[//]: # ()
 [//]: # (## Movie Generation)
 
+[//]: # ()
 [//]: # (Inputs:)
 
+[//]: # ()
 [//]: # (1. **Data from Docking Output**: Indicated by paths like `results/test/index0_idx_0/`. )
 
+[//]: # ()
 [//]: # (The notation "1+2" implies that movies for rank1 and rank2 poses are needed.)
 
+[//]: # ()
 [//]: # (2. **Number of Animations**: Specified by the user &#40;default is "1"&#41;.)
 
 [//]: # ()
+[//]: # ()
 [//]: # (#### Example command for generating movies:)
 
+[//]: # ()
 [//]: # (```bash)
 
+[//]: # ()
 [//]: # (python movie_generation.py results/test/index0_idx_0/ 1+2 --python /home/ruofan/anaconda3/envs/dynamicbind/bin/python --relax_python /home/ruofan/anaconda3/envs/relax/bin/python)
 
+[//]: # ()
 [//]: # (```)
 
 [//]: # (Outputs:)

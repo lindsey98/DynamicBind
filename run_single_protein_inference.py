@@ -157,12 +157,12 @@ else:
         do(cmd)
         print("inference complete.")
 
-    # if not args.no_relax:
-    #     cmd = f"CUDA_VISIBLE_DEVICES={args.device} {relax_python} {script_folder}/relax_final.py --results_path {args.results}/{header} --samples_per_complex {args.samples_per_complex} --num_workers {args.num_workers}"
-    #     print("relax final step structure.")
-    #     exit()
-        # do(cmd)
-        # print("final step structure relax complete.")
+    if not args.no_relax:
+        cmd = f"CUDA_VISIBLE_DEVICES={args.device} {relax_python} {script_folder}/relax_final.py --results_path {args.results}/{header} --samples_per_complex {args.samples_per_complex} --num_workers {args.num_workers}"
+        print("relax final step structure.")
+        exit()
+        do(cmd)
+        print("final step structure relax complete.")
 
     if args.movie:
         for i in range(len(ligands)):

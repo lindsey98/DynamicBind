@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
-
 import os
 import sys
-
 from Bio.PDB import PDBParser, MMCIFParser
 from Bio.PDB import PDBIO, Select, MMCIFIO
 import argparse

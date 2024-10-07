@@ -11,12 +11,8 @@ from rdkit.Chem import RemoveHs
 from functools import partial
 import numpy as np
 import pandas as pd
-import scipy
-from Bio.PDB import PDBParser
 
 from rdkit import RDLogger
-from rdkit.Chem import MolFromSmiles, AddHs
-from rdkit import Chem
 
 import torch
 torch.set_num_threads(1)
@@ -27,23 +23,17 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 from torch_geometric.loader import DataLoader
 
 
-from datasets.process_mols import read_molecule, generate_conformer, write_mol_with_coords
 from datasets.pdbbind import PDBBind,PDBBindScoring
 from utils.diffusion_utils import t_to_sigma as t_to_sigma_compl, get_t_schedule, set_time
 from utils.sampling import randomize_position, sampling
 from utils.utils import get_model
-from utils.visualise import LigandToPDB, modify_pdb, receptor_to_pdb, save_protein
-from utils.clash import compute_side_chain_metrics
-# from utils.relax import openmm_relax
 from tqdm import tqdm
 import datetime
 from contextlib import contextmanager
 
-from multiprocessing import Pool as ThreadPool
 
 import random
 import pickle
-# pool = ThreadPool(8)
 
 @contextmanager
 def Timer(title):
@@ -120,30 +110,37 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 if args.protein_ligand_csv is not None:
     df = pd.read_csv(args.protein_ligand_csv)
-    # df = df[:10]
     if 'crystal_protein_path' not in df.columns:
         df['crystal_protein_path'] = df['protein_path']
     protein_path_list = df['protein_path'].tolist()
     ligand_descriptions = df['ligand'].tolist()
-    # if 'name' not in df.columns:
-    #     df['name'] = [f'idx_{i}' for i in range(df.shape[0])]
-    # elif df['name'].nunique() < df.shape[0]:
-    #     df['name'] = [f'idx_{i}' for i in range(df.shape[0])]
     df['name'] = [f'idx_{i}' for i in range(df.shape[0])]
     name_list = df['name'].tolist()
 else:
     protein_path_list = [args.protein_path]
     ligand_descriptions = [args.ligand]
 
-test_dataset = PDBBindScoring(transform=None, root='', name_list=name_list, protein_path_list=protein_path_list, ligand_descriptions=ligand_descriptions,
-                       receptor_radius=score_model_args.receptor_radius, cache_path=args.cache_path,
-                       remove_hs=score_model_args.remove_hs, max_lig_size=None,
-                       c_alpha_max_neighbors=score_model_args.c_alpha_max_neighbors, matching=False, keep_original=False,
-                       popsize=score_model_args.matching_popsize, maxiter=score_model_args.matching_maxiter,center_ligand=True,
-                       all_atoms=score_model_args.all_atoms, atom_radius=score_model_args.atom_radius,
-                       atom_max_neighbors=score_model_args.atom_max_neighbors,
-                       esm_embeddings_path= args.esm_embeddings_path if score_model_args.esm_embeddings_path is not None else None,
-                       require_ligand=True,require_receptor=True, num_workers=args.num_workers, keep_local_structures=args.keep_local_structures, use_existing_cache=args.use_existing_cache)
+test_dataset = PDBBindScoring(transform=None, root='',
+                              name_list=name_list,
+                              protein_path_list=protein_path_list,
+                              ligand_descriptions=ligand_descriptions,
+                              receptor_radius=score_model_args.receptor_radius,
+                              cache_path=args.cache_path,
+                              remove_hs=score_model_args.remove_hs,
+                              max_lig_size=None,
+                              c_alpha_max_neighbors=score_model_args.c_alpha_max_neighbors,
+                              matching=False,
+                              keep_original=False,
+                              popsize=score_model_args.matching_popsize,
+                              maxiter=score_model_args.matching_maxiter,
+                              center_ligand=True,
+                              all_atoms=score_model_args.all_atoms,
+                              atom_radius=score_model_args.atom_radius,
+                              atom_max_neighbors=score_model_args.atom_max_neighbors,
+                              esm_embeddings_path= args.esm_embeddings_path if score_model_args.esm_embeddings_path is not None else None,
+                              require_ligand=True,require_receptor=True, num_workers=args.num_workers,
+                              keep_local_structures=args.keep_local_structures, use_existing_cache=args.use_existing_cache)
+
 test_loader = DataLoader(dataset=test_dataset, batch_size=1, shuffle=False)
 
 t_to_sigma = partial(t_to_sigma_compl, args=score_model_args)
@@ -185,7 +182,8 @@ print('Size of test dataset: ', len(test_dataset))
 affinity_pred = {}
 all_complete_affinity = []
 for idx, orig_complex_graph in tqdm(enumerate(test_loader)):
-    # if idx not in [54, 123, 141, 157, 165, 251]:continue
+    print(orig_complex_graph)
+    exit()
     try:
         data_list = [copy.deepcopy(orig_complex_graph) for _ in range(N)]
         randomize_position(data_list, score_model_args.no_torsion, args.no_random,score_model_args.tr_sigma_max,score_model_args.rot_sigma_max, score_model_args.tor_sigma_max,score_model_args.res_tr_sigma_max,score_model_args.res_rot_sigma_max)
@@ -210,36 +208,19 @@ for idx, orig_complex_graph in tqdm(enumerate(test_loader)):
                 all_lddt_pred.append(outputs[2])
                 all_affinity_pred.append(outputs[3])
             except Exception as e:
-                # raise e
                 print(e)
         all_lddt_pred = torch.cat(all_lddt_pred)
         all_affinity_pred = torch.cat(all_affinity_pred)
         ligand_pos = np.asarray([complex_graph['ligand'].pos.cpu().numpy() + orig_complex_graph.original_center.cpu().numpy() for complex_graph in final_data_list])
         final_receptor_pdbs = []
 
-        # with Timer('modify pdb'):
-        #     final_receptor_pdbs = pool.map(modify_pdb, zip([copy.deepcopy(receptor_pdb) for _ in range(len(data_list))], data_list))
-        # run_times.append(time.time() - start_time)
-
-        # sample_ligand_path_list = []
-        # sample_protein_path_list = []
-        # for rank, pos in enumerate(ligand_pos):
-        #     mol_pred = copy.deepcopy(lig)
-        #     if rank == 0: write_mol_with_coords(mol_pred, pos, os.path.join(write_dir, f'rank{rank+1}.sdf'))
-        #     write_mol_with_coords(mol_pred, pos, os.path.join(write_dir, f'rank{rank+1}_ligand.sdf'))
-        #     save_protein(final_receptor_pdbs[rank],os.path.join(write_dir, f'rank{rank+1}_receptor.pdb'))
-        #     sample_ligand_path_list.append(os.path.join(write_dir, f'rank{rank+1}_ligand.sdf'))
-        #     sample_protein_path_list.append(os.path.join(write_dir, f'rank{rank+1}_receptor.pdb'))
-
-
         all_lddt_pred = all_lddt_pred.view(-1).cpu().numpy()
-        # print(all_lddt_pred)
         all_affinity_pred = all_affinity_pred.view(-1).cpu().numpy()
         final_affinity_pred = np.minimum((all_affinity_pred*all_lddt_pred).sum() / (all_lddt_pred.sum()+1e-12),15.)
 
         affinity_pred[orig_complex_graph.name[0]] = final_affinity_pred
 
-        complete_affinity = pd.DataFrame({'name':orig_complex_graph.name[0],'lddt':all_lddt_pred,'affinity':all_affinity_pred})
+        complete_affinity = pd.DataFrame({'name':orig_complex_graph.name[0], 'lddt':all_lddt_pred, 'affinity':all_affinity_pred})
         all_complete_affinity.append(complete_affinity)
         names_list.append(orig_complex_graph.name[0])
     except Exception as e:
@@ -250,7 +231,8 @@ for idx, orig_complex_graph in tqdm(enumerate(test_loader)):
 print(f'Failed for {failures} complexes')
 print(f'Skipped {skipped} complexes')
 
-affinity_pred_df = pd.DataFrame({'name':list(affinity_pred.keys()),'affinity':list(affinity_pred.values())})
+affinity_pred_df = pd.DataFrame({'name':list(affinity_pred.keys()),
+                                 'dynamicbind_affinity':list(affinity_pred.values())})
 affinity_pred_df.to_csv(f'{args.out_dir}/affinity_prediction.csv',index=False)
 pd.concat(all_complete_affinity).to_csv(f'{args.out_dir}/complete_affinity_prediction.csv',index=False)
 
